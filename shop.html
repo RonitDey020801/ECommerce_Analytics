@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopDemo — Home</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="shop.html" class="logo">Shop<span>Demo</span></a>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search products, categories…">
+      <button id="search-btn">Search</button>
+    </div>
+    <nav class="nav-links">
+      <a href="shop.html">Home</a>
+      <a href="index.html">Sign In</a>
+      <a href="cart.html" class="cart-link">
+        🛒 Cart <span class="cart-badge cart-count" style="display:none">0</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <div class="home-layout">
+
+    <!-- ── Sidebar Filters ── -->
+    <aside class="filters-sidebar">
+
+      <div class="filter-block">
+        <div class="filter-title">Category</div>
+        <div id="cat-filters"></div>
+      </div>
+
+      <div class="filter-block">
+        <div class="filter-title">Price Range</div>
+        <div class="price-inputs">
+          <input type="number" id="price-min" placeholder="Min" min="0" value="0">
+          <span>–</span>
+          <input type="number" id="price-max" placeholder="Max" min="0" value="300">
+        </div>
+        <button class="btn btn-ghost btn-sm btn-full price-apply" id="apply-price">Apply</button>
+      </div>
+
+      <div class="filter-block">
+        <div class="filter-title">Availability</div>
+        <div class="filter-option">
+          <input type="checkbox" id="in-stock-only">
+          <label for="in-stock-only">In Stock Only</label>
+        </div>
+      </div>
+
+      <div class="filter-block">
+        <div class="filter-title">Sort By</div>
+        <select class="sidebar-select" id="sort-select">
+          <option value="default">Featured</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+          <option value="name-asc">Name: A → Z</option>
+          <option value="rating-desc">Highest Rated</option>
+        </select>
+      </div>
+
+      <button class="btn btn-ghost btn-sm btn-full" id="clear-filters" style="margin-top:0.5rem">
+        Clear All Filters
+      </button>
+
+    </aside>
+
+    <!-- ── Product Listing ── -->
+    <section>
+      <div class="results-header">
+        <div class="results-count" id="results-count"></div>
+        <div class="active-filter-tags" id="filter-tags"></div>
+      </div>
+      <div class="product-grid" id="product-grid"></div>
+    </section>
+
+  </div>
+</main>
+
+<div id="analytics-panel"></div>
+
+<script src="js/data.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+<script>
+  // ── State ──────────────────────────────────────────────────
+  let state = {
+    search: '',
+    categories: new Set(),
+    minPrice: 0,
+    maxPrice: 300,
+    inStockOnly: false,
+    sort: 'default'
+  };
+
+  // Restore search query from URL (coming from cart page search)
+  const urlQ = getParam('q');
+  if (urlQ) { state.search = urlQ; document.getElementById('search-input').value = urlQ; }
+
+  // ── Filtering & Sorting ────────────────────────────────────
+  function filtered() {
+    let list = [...PRODUCTS];
+
+    if (state.search) {
+      const q = state.search.toLowerCase();
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+      );
+    }
+
+    if (state.categories.size > 0)
+      list = list.filter(p => state.categories.has(p.category));
+
+    list = list.filter(p => p.price >= state.minPrice && p.price <= state.maxPrice);
+
+    if (state.inStockOnly) list = list.filter(p => p.inStock);
+
+    switch (state.sort) {
+      case 'price-asc':   list.sort((a, b) => a.price - b.price); break;
+      case 'price-desc':  list.sort((a, b) => b.price - a.price); break;
+      case 'name-asc':    list.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case 'rating-desc': list.sort((a, b) => b.rating - a.rating); break;
+    }
+    return list;
+  }
+
+  // ── Render Products ────────────────────────────────────────
+  function renderProducts() {
+    const products = filtered();
+    const grid = document.getElementById('product-grid');
+    const countEl = document.getElementById('results-count');
+
+    countEl.textContent = `${products.length} product${products.length !== 1 ? 's' : ''}`;
+
+    if (products.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem">🔍</div>
+          <p>No products match your search. Try adjusting your filters.</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = products.map(p => `
+      <div class="product-card" onclick="goProduct(${p.id})">
+        <div class="product-thumb">
+          ${p.emoji}
+          ${p.badge === 'sale' ? `<span class="badge-sale">SALE</span>` : ''}
+          ${p.badge === 'new'  ? `<span class="badge-new">NEW</span>`  : ''}
+        </div>
+        <div class="product-info">
+          <div class="product-cat">${p.category}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-rating">
+            <span class="stars">${stars(p.rating)}</span>
+            <span class="review-count">(${p.reviews})</span>
+          </div>
+          <div class="product-price-row">
+            <span class="price">${fmt(p.price)}</span>
+            ${p.originalPrice ? `
+              <span class="price-original">${fmt(p.originalPrice)}</span>
+              <span class="price-save">-${savePct(p.originalPrice, p.price)}%</span>
+            ` : ''}
+          </div>
+          ${!p.inStock ? `<div class="oos-label">Out of Stock</div>` : ''}
+          <button
+            class="btn btn-primary btn-sm btn-full"
+            onclick="event.stopPropagation(); quickAdd(${p.id})"
+            ${!p.inStock ? 'disabled' : ''}>
+            ${p.inStock ? 'Add to Cart' : 'Out of Stock'}
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Render Category Filters ────────────────────────────────
+  function renderCatFilters() {
+    const counts = {};
+    PRODUCTS.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
+
+    document.getElementById('cat-filters').innerHTML = CATEGORIES.map(c => `
+      <div class="filter-option">
+        <input type="checkbox" id="cat-${c}" value="${c}" ${state.categories.has(c) ? 'checked' : ''}>
+        <label for="cat-${c}">${c}</label>
+        <span class="count">${counts[c]}</span>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('#cat-filters input').forEach(cb => {
+      cb.addEventListener('change', () => {
+        cb.checked ? state.categories.add(cb.value) : state.categories.delete(cb.value);
+        renderFilterTags();
+        renderProducts();
+      });
+    });
+  }
+
+  // ── Filter tags ────────────────────────────────────────────
+  function renderFilterTags() {
+    const tags = [];
+
+    if (state.search) tags.push({ label: `"${state.search}"`, clear: () => { state.search = ''; document.getElementById('search-input').value = ''; } });
+
+    state.categories.forEach(c => tags.push({
+      label: c,
+      clear: () => {
+        state.categories.delete(c);
+        document.querySelector(`#cat-${c}`)?.removeAttribute('checked');
+        renderCatFilters();
+      }
+    }));
+
+    if (state.inStockOnly) tags.push({ label: 'In Stock', clear: () => { state.inStockOnly = false; document.getElementById('in-stock-only').checked = false; } });
+
+    document.getElementById('filter-tags').innerHTML = tags.map((t, i) => `
+      <span class="filter-tag">${t.label} <button onclick="clearTag(${i})">×</button></span>
+    `).join('');
+
+    window._tagClears = tags.map(t => t.clear);
+  }
+
+  function clearTag(i) {
+    window._tagClears[i]();
+    renderFilterTags();
+    renderProducts();
+  }
+
+  // ── Actions ────────────────────────────────────────────────
+  function goProduct(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) Analytics.track('product_click', { product_id: p.id, product_name: p.name, category: p.category, price: p.price });
+    window.location.href = `product.html?id=${id}`;
+  }
+
+  function quickAdd(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    Cart.addItem(p, 1);
+    syncCart();
+  }
+
+  // ── Event Listeners ────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    renderCatFilters();
+    renderProducts();
+    renderFilterTags();
+    Analytics.track('page_view', { page: 'shop', title: document.title });
+  });
+
+  // Search
+  const searchInput = document.getElementById('search-input');
+  const debouncedSearch = debounce(() => {
+    state.search = searchInput.value.trim();
+    renderFilterTags();
+    renderProducts();
+  }, 350);
+
+  searchInput.addEventListener('input', debouncedSearch);
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      state.search = searchInput.value.trim();
+      if (state.search) Analytics.track('search', { query: state.search, result_count: filtered().length });
+      renderFilterTags(); renderProducts();
+    }
+  });
+  document.getElementById('search-btn').addEventListener('click', () => {
+    state.search = searchInput.value.trim();
+    if (state.search) Analytics.track('search', { query: state.search, result_count: filtered().length });
+    renderFilterTags(); renderProducts();
+  });
+
+  // Price
+  document.getElementById('apply-price').addEventListener('click', () => {
+    state.minPrice = parseFloat(document.getElementById('price-min').value) || 0;
+    state.maxPrice = parseFloat(document.getElementById('price-max').value) || 9999;
+    renderProducts();
+  });
+
+  // In stock
+  document.getElementById('in-stock-only').addEventListener('change', e => {
+    state.inStockOnly = e.target.checked;
+    Analytics.track('filter_applied', { filter_type: 'availability', filter_value: state.inStockOnly ? 'in_stock' : 'all' });
+    renderFilterTags();
+    renderProducts();
+  });
+
+  // Sort
+  document.getElementById('sort-select').addEventListener('change', e => {
+    state.sort = e.target.value;
+    Analytics.track('sort_applied', { sort_type: state.sort });
+    renderProducts();
+  });
+
+  // Clear all
+  document.getElementById('clear-filters').addEventListener('click', () => {
+    state = { search: '', categories: new Set(), minPrice: 0, maxPrice: 300, inStockOnly: false, sort: 'default' };
+    document.getElementById('search-input').value = '';
+    document.getElementById('price-min').value = '0';
+    document.getElementById('price-max').value = '300';
+    document.getElementById('in-stock-only').checked = false;
+    document.getElementById('sort-select').value = 'default';
+    renderCatFilters();
+    renderFilterTags();
+    renderProducts();
+  });
+</script>
+
+</body>
+</html>
