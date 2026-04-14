@@ -10,14 +10,14 @@
 
 <header class="header">
   <div class="container header-inner">
-    <a href="index.html" class="logo">Shop<span>Demo</span></a>
+    <a href="shop.html" class="logo">Shop<span>Demo</span></a>
     <div class="search-bar">
       <input type="text" id="search-input" placeholder="Search products…">
       <button id="search-btn">Search</button>
     </div>
     <nav class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="login.html">Sign In</a>
+      <a href="shop.html">Home</a>
+      <a href="index.html">Sign In</a>
       <a href="cart.html" class="cart-link">
         🛒 Cart <span class="cart-badge cart-count" style="display:none">0</span>
       </a>
@@ -51,7 +51,7 @@
           <div class="empty-icon">🛒</div>
           <h3>Your cart is empty</h3>
           <p>Looks like you haven't added anything yet.</p>
-          <a href="index.html" class="btn btn-primary">Continue Shopping</a>
+          <a href="shop.html" class="btn btn-primary">Continue Shopping</a>
         </div>`;
       return;
     }
@@ -86,7 +86,7 @@
             `).join('')}
           </div>
           <div style="margin-top:1.1rem;display:flex;gap:0.75rem">
-            <a href="index.html" class="btn btn-ghost">← Continue Shopping</a>
+            <a href="shop.html" class="btn btn-ghost">← Continue Shopping</a>
             <button class="btn btn-ghost btn-sm" onclick="clearCart()">Clear Cart</button>
           </div>
         </div>
@@ -172,7 +172,7 @@
   // Search redirect
   document.getElementById('search-btn').addEventListener('click', () => {
     const q = document.getElementById('search-input').value.trim();
-    if (q) window.location.href = `index.html?q=${encodeURIComponent(q)}`;
+    if (q) window.location.href = `shop.html?q=${encodeURIComponent(q)}`;
   });
   document.getElementById('search-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('search-btn').click();
