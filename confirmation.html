@@ -36,13 +36,17 @@
   </div>
 </main>
 
+<div id="analytics-panel"></div>
+
 <script src="js/data.js"></script>
+<script src="js/analytics.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     let order = null;
     try { order = JSON.parse(sessionStorage.getItem('last_order')); } catch {}
+    Analytics.track('page_view', { page: 'confirmation', transaction_id: order?.id || null, title: document.title });
 
     if (!order) {
       // No order in session — show generic message

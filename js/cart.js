@@ -34,12 +34,20 @@ const Cart = (() => {
       , quantity: qty });
     }
     save(items);
+    if (typeof Analytics !== 'undefined') {
+      Analytics.track('add_to_cart', { product_id: product.id, product_name: product.name, category: product.category, price: product.price, quantity: qty, currency: 'USD' });
+    }
     showToast(`"${product.name}" added to cart`);
   }
 
   function removeItem(productId) {
-    const items = load().filter(i => i.id !== productId);
+    const all     = load();
+    const removed = all.find(i => i.id === productId);
+    const items   = all.filter(i => i.id !== productId);
     save(items);
+    if (removed && typeof Analytics !== 'undefined') {
+      Analytics.track('remove_from_cart', { product_id: removed.id, product_name: removed.name, category: removed.category, price: removed.price, quantity: removed.quantity, currency: 'USD' });
+    }
   }
 
   function updateQty(productId, newQty) {
