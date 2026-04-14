@@ -17,6 +17,7 @@
     </div>
     <nav class="nav-links">
       <a href="index.html">Home</a>
+      <a href="login.html">Sign In</a>
       <a href="cart.html" class="cart-link">
         🛒 Cart <span class="cart-badge cart-count" style="display:none">0</span>
       </a>
@@ -29,7 +30,10 @@
   <div id="cart-mount"></div>
 </main>
 
+<div id="analytics-panel"></div>
+
 <script src="js/data.js"></script>
+<script src="js/analytics.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
 <script>
@@ -155,10 +159,15 @@
   }
 
   function startCheckout() {
+    Analytics.track('checkout_start', { items: Cart.getItems().map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })), subtotal: Cart.getSubtotal(), item_count: Cart.getCount(), currency: 'USD' });
     window.location.href = 'checkout.html';
   }
 
-  document.addEventListener('DOMContentLoaded', render);
+  document.addEventListener('DOMContentLoaded', () => {
+    render();
+    Analytics.track('page_view', { page: 'cart', title: document.title });
+    Analytics.track('cart_view', { items: Cart.getItems().map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })), subtotal: Cart.getSubtotal(), item_count: Cart.getCount() });
+  });
 
   // Search redirect
   document.getElementById('search-btn').addEventListener('click', () => {

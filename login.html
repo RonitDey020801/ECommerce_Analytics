@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — ShopDemo</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Shop<span>Demo</span></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="cart.html" class="cart-link">
+        🛒 Cart <span class="cart-badge cart-count" style="display:none">0</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="login-wrap">
+  <div class="login-card">
+
+    <div class="login-logo">
+      <div class="login-logo-mark">Shop<span>Demo</span></div>
+      <p>Analytics testing storefront</p>
+    </div>
+
+    <h1 class="login-title">Sign in to your account</h1>
+    <p class="login-subtitle">Enter your credentials below to continue shopping.</p>
+
+    <!-- Social login -->
+    <div class="social-btns">
+      <button class="social-btn" id="google-btn">
+        <svg width="16" height="16" viewBox="0 0 48 48" fill="none">
+          <path d="M43.6 20.5H42V20H24v8h11.3C33.7 32.5 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.3 29 5 24 5 13 5 4 14 4 25s9 20 20 20c11 0 20-9 20-20 0-1.2-.1-2.4-.4-4.5z" fill="#FFC107"/>
+          <path d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.3 29 5 24 5 16.3 5 9.7 9 6.3 14.7z" fill="#FF3D00"/>
+          <path d="M24 45c4.9 0 9.3-1.8 12.7-4.8l-5.9-5c-1.7 1.2-3.9 1.8-6.8 1.8-5.3 0-9.7-3.5-11.3-8.3l-6.5 5C9.5 41 16.2 45 24 45z" fill="#4CAF50"/>
+          <path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.4l5.9 5c-.4.4 6.9-5 6.9-13.4 0-1.2-.1-2.4-.4-4.5z" fill="#1976D2"/>
+        </svg>
+        Google
+      </button>
+      <button class="social-btn" id="github-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85 0 1.71.11 2.51.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.41-.01 2.74 0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/>
+        </svg>
+        GitHub
+      </button>
+    </div>
+
+    <div class="divider-text">or sign in with email</div>
+
+    <!-- Email / password form -->
+    <form class="login-form" id="login-form" novalidate>
+
+      <div class="login-field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email"
+          placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div class="login-field">
+        <label for="password">Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password"
+            placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="toggle-pw" id="toggle-pw" title="Show / hide">👁</button>
+        </div>
+      </div>
+
+      <div class="login-options">
+        <label class="remember-me">
+          <input type="checkbox" id="remember-me">
+          <span>Remember me</span>
+        </label>
+        <span class="forgot-link" id="forgot-link">Forgot password?</span>
+      </div>
+
+      <div class="login-error" id="login-error"></div>
+
+      <div class="demo-hint">
+        💡 Demo credentials: any email + password <strong>demo123</strong>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full btn-lg" id="submit-btn">
+        Sign In
+      </button>
+
+    </form>
+
+    <div class="login-footer">
+      Don't have an account?
+      <a href="#" id="signup-link">Create one →</a>
+    </div>
+
+  </div>
+</div>
+
+<div id="analytics-panel"></div>
+
+<script src="js/data.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const redirectTo = getParam('redirect') || 'index.html';
+  let loginStarted = false;
+
+  // ── Page & form view ─────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    Analytics.track('page_view',  { page: 'login', title: document.title });
+    Analytics.track('login_view', { redirect: redirectTo });
+  });
+
+  // ── First field interaction ──────────────────────────────
+  ['email', 'password'].forEach(id => {
+    document.getElementById(id).addEventListener('focus', () => {
+      if (!loginStarted) {
+        loginStarted = true;
+        Analytics.track('login_started', { method: 'email_password' });
+      }
+    }, { once: true });
+  });
+
+  // ── Password visibility toggle ───────────────────────────
+  document.getElementById('toggle-pw').addEventListener('click', () => {
+    const pw = document.getElementById('password');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+  });
+
+  // ── Remember me ──────────────────────────────────────────
+  document.getElementById('remember-me').addEventListener('change', e => {
+    Analytics.track('remember_me_toggled', { checked: e.target.checked });
+  });
+
+  // ── Forgot password ──────────────────────────────────────
+  document.getElementById('forgot-link').addEventListener('click', () => {
+    Analytics.track('forgot_password_clicked', {
+      email: document.getElementById('email').value.trim() || ''
+    });
+    showToast('Password reset is not available in the demo.');
+  });
+
+  // ── Sign up link ─────────────────────────────────────────
+  document.getElementById('signup-link').addEventListener('click', e => {
+    e.preventDefault();
+    Analytics.track('signup_clicked', { from: 'login_page' });
+    showToast('Registration is not available in the demo.');
+  });
+
+  // ── Social buttons ────────────────────────────────────────
+  document.getElementById('google-btn').addEventListener('click', () => {
+    Analytics.track('social_login_clicked', { provider: 'google' });
+    showToast('Google login is not available in the demo.');
+  });
+
+  document.getElementById('github-btn').addEventListener('click', () => {
+    Analytics.track('social_login_clicked', { provider: 'github' });
+    showToast('GitHub login is not available in the demo.');
+  });
+
+  // ── Form submit ──────────────────────────────────────────
+  document.getElementById('login-form').addEventListener('submit', e => {
+    e.preventDefault();
+
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('remember-me').checked;
+    const errorEl  = document.getElementById('login-error');
+
+    Analytics.track('login_submitted', {
+      method: 'email_password',
+      email_provided: !!email,
+      remember_me: remember
+    });
+
+    // Validation
+    if (!email || !password) {
+      errorEl.textContent = 'Please enter your email and password.';
+      errorEl.classList.add('show');
+      Analytics.track('login_failed', { reason: 'missing_fields' });
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errorEl.textContent = 'Please enter a valid email address.';
+      errorEl.classList.add('show');
+      Analytics.track('login_failed', { reason: 'invalid_email', email });
+      return;
+    }
+
+    // Demo auth check
+    if (password !== 'demo123') {
+      errorEl.textContent = 'Incorrect password. Hint: try "demo123"';
+      errorEl.classList.add('show');
+      document.getElementById('password').style.borderColor = 'var(--danger)';
+      Analytics.track('login_failed', { reason: 'wrong_password', email });
+      return;
+    }
+
+    // Success
+    errorEl.classList.remove('show');
+    document.getElementById('password').style.borderColor = '';
+
+    Analytics.track('login_success', {
+      method: 'email_password',
+      email,
+      remember_me: remember
+    });
+
+    sessionStorage.setItem('shopdemo_user', JSON.stringify({ email, remember }));
+    showToast('Signed in successfully! Redirecting…');
+    setTimeout(() => { window.location.href = redirectTo; }, 1200);
+  });
+</script>
+
+</body>
+</html>

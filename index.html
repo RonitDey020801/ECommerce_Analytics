@@ -17,6 +17,7 @@
     </div>
     <nav class="nav-links">
       <a href="index.html">Home</a>
+      <a href="login.html">Sign In</a>
       <a href="cart.html" class="cart-link">
         🛒 Cart <span class="cart-badge cart-count" style="display:none">0</span>
       </a>
@@ -82,7 +83,10 @@
   </div>
 </main>
 
+<div id="analytics-panel"></div>
+
 <script src="js/data.js"></script>
+<script src="js/analytics.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/main.js"></script>
 <script>
@@ -232,7 +236,11 @@
   }
 
   // ── Actions ────────────────────────────────────────────────
-  function goProduct(id) { window.location.href = `product.html?id=${id}`; }
+  function goProduct(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) Analytics.track('product_click', { product_id: p.id, product_name: p.name, category: p.category, price: p.price });
+    window.location.href = `product.html?id=${id}`;
+  }
 
   function quickAdd(id) {
     const p = PRODUCTS.find(x => x.id === id);
@@ -245,6 +253,7 @@
     renderCatFilters();
     renderProducts();
     renderFilterTags();
+    Analytics.track('page_view', { page: 'home', title: document.title });
   });
 
   // Search
@@ -256,8 +265,18 @@
   }, 350);
 
   searchInput.addEventListener('input', debouncedSearch);
-  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { state.search = searchInput.value.trim(); renderFilterTags(); renderProducts(); } });
-  document.getElementById('search-btn').addEventListener('click', () => { state.search = searchInput.value.trim(); renderFilterTags(); renderProducts(); });
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      state.search = searchInput.value.trim();
+      if (state.search) Analytics.track('search', { query: state.search, result_count: filtered().length });
+      renderFilterTags(); renderProducts();
+    }
+  });
+  document.getElementById('search-btn').addEventListener('click', () => {
+    state.search = searchInput.value.trim();
+    if (state.search) Analytics.track('search', { query: state.search, result_count: filtered().length });
+    renderFilterTags(); renderProducts();
+  });
 
   // Price
   document.getElementById('apply-price').addEventListener('click', () => {
@@ -269,6 +288,7 @@
   // In stock
   document.getElementById('in-stock-only').addEventListener('change', e => {
     state.inStockOnly = e.target.checked;
+    Analytics.track('filter_applied', { filter_type: 'availability', filter_value: state.inStockOnly ? 'in_stock' : 'all' });
     renderFilterTags();
     renderProducts();
   });
@@ -276,6 +296,7 @@
   // Sort
   document.getElementById('sort-select').addEventListener('change', e => {
     state.sort = e.target.value;
+    Analytics.track('sort_applied', { sort_type: state.sort });
     renderProducts();
   });
 
