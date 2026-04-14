@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — ShopDemo</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Shop<span>Demo</span></a>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search products…">
+      <button id="search-btn">Search</button>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="cart.html" class="cart-link">
+        🛒 Cart <span class="cart-badge cart-count" style="display:none">0</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="container product-detail-section">
+  <div class="breadcrumb" id="breadcrumb"></div>
+  <div id="product-mount"></div>
+  <div id="related-section"></div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const productId = parseInt(getParam('id'));
+  const product   = PRODUCTS.find(p => p.id === productId);
+
+  if (!product) {
+    document.getElementById('product-mount').innerHTML = `
+      <div style="text-align:center;padding:4rem 1rem">
+        <div style="font-size:3rem;margin-bottom:1rem">😕</div>
+        <h2 style="margin-bottom:0.5rem">Product not found</h2>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem">The product you're looking for doesn't exist.</p>
+        <a href="index.html" class="btn btn-primary">Back to Shop</a>
+      </div>`;
+  } else {
+    document.title = `${product.name} — ShopDemo`;
+    let qty = 1;
+
+    // Breadcrumb
+    document.getElementById('breadcrumb').innerHTML = `
+      <a href="index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html?cat=${encodeURIComponent(product.category)}">${product.category}</a>
+      <span class="sep">›</span>
+      <span>${product.name}</span>`;
+
+    // Main product content
+    document.getElementById('product-mount').innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-image-wrap">${product.emoji}</div>
+
+        <div class="detail-info">
+          <div class="detail-cat">${product.category}</div>
+          <h1 class="detail-name">${product.name}</h1>
+
+          <div class="detail-rating">
+            <span class="stars" style="font-size:1rem">${stars(product.rating)}</span>
+            <span style="font-size:0.875rem;color:var(--text-muted)">${product.rating} &nbsp;·&nbsp; ${product.reviews} reviews</span>
+          </div>
+
+          <div class="detail-price-row">
+            <span class="detail-price">${fmt(product.price)}</span>
+            ${product.originalPrice ? `
+              <span class="detail-original">${fmt(product.originalPrice)}</span>
+              <span class="save-badge">Save ${savePct(product.originalPrice, product.price)}%</span>
+            ` : ''}
+          </div>
+
+          <p class="detail-desc">${product.description}</p>
+
+          <div class="stock-row">
+            <div class="stock-dot ${product.inStock ? 'in' : 'out'}"></div>
+            <span>${product.inStock ? 'In Stock' : 'Out of Stock'}</span>
+          </div>
+
+          ${product.inStock ? `
+            <div class="qty-row">
+              <label>Qty:</label>
+              <div class="qty-ctrl">
+                <button id="qty-dec">−</button>
+                <input type="number" id="qty-input" value="1" min="1" max="99">
+                <button id="qty-inc">+</button>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button class="btn btn-primary btn-lg" id="atc-btn">Add to Cart</button>
+              <a href="cart.html" class="btn btn-outline btn-lg">View Cart</a>
+            </div>
+          ` : `
+            <button class="btn btn-ghost btn-lg" disabled>Out of Stock</button>
+          `}
+        </div>
+      </div>`;
+
+    // Qty controls
+    if (product.inStock) {
+      const qtyInput = document.getElementById('qty-input');
+
+      document.getElementById('qty-dec').addEventListener('click', () => {
+        if (qty > 1) { qty--; qtyInput.value = qty; }
+      });
+
+      document.getElementById('qty-inc').addEventListener('click', () => {
+        if (qty < 99) { qty++; qtyInput.value = qty; }
+      });
+
+      qtyInput.addEventListener('change', () => {
+        qty = Math.max(1, Math.min(99, parseInt(qtyInput.value) || 1));
+        qtyInput.value = qty;
+      });
+
+      document.getElementById('atc-btn').addEventListener('click', () => {
+        Cart.addItem(product, qty);
+        syncCart();
+      });
+    }
+
+    // Related products
+    const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+    if (related.length > 0) {
+      document.getElementById('related-section').innerHTML = `
+        <div style="border-top:1px solid var(--border);padding-top:2.5rem;margin-top:1rem">
+          <h2 class="section-title">You Might Also Like</h2>
+          <div class="product-grid">
+            ${related.map(p => `
+              <div class="product-card" onclick="window.location.href='product.html?id=${p.id}'">
+                <div class="product-thumb">
+                  ${p.emoji}
+                  ${p.badge === 'sale' ? `<span class="badge-sale">SALE</span>` : ''}
+                  ${p.badge === 'new'  ? `<span class="badge-new">NEW</span>`  : ''}
+                </div>
+                <div class="product-info">
+                  <div class="product-cat">${p.category}</div>
+                  <div class="product-name">${p.name}</div>
+                  <div class="product-rating">
+                    <span class="stars">${stars(p.rating)}</span>
+                    <span class="review-count">(${p.reviews})</span>
+                  </div>
+                  <div class="product-price-row">
+                    <span class="price">${fmt(p.price)}</span>
+                    ${p.originalPrice ? `<span class="price-original">${fmt(p.originalPrice)}</span>` : ''}
+                  </div>
+                  ${!p.inStock ? `<div class="oos-label">Out of Stock</div>` : ''}
+                  <button class="btn btn-primary btn-sm btn-full"
+                    onclick="event.stopPropagation(); relatedAdd(${p.id})"
+                    ${!p.inStock ? 'disabled' : ''}>
+                    ${p.inStock ? 'Add to Cart' : 'Out of Stock'}
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+  }
+
+  function relatedAdd(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    Cart.addItem(p, 1);
+    syncCart();
+  }
+
+  // Search redirect
+  document.getElementById('search-btn').addEventListener('click', () => {
+    const q = document.getElementById('search-input').value.trim();
+    if (q) window.location.href = `index.html?q=${encodeURIComponent(q)}`;
+  });
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('search-btn').click();
+  });
+</script>
+
+</body>
+</html>

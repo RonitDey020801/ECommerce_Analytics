@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — ShopDemo</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Shop<span>Demo</span></a>
+    <nav class="nav-links">
+      <span style="font-size:0.85rem;color:var(--text-muted)">🔒 Secure Checkout</span>
+      <a href="cart.html">← Back to Cart</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container page-wrap">
+  <h1 class="page-title">Checkout</h1>
+  <div class="checkout-layout">
+
+    <!-- Left: form -->
+    <div>
+      <div class="step-bar" id="step-bar"></div>
+      <div class="checkout-card" id="form-area"></div>
+    </div>
+
+    <!-- Right: order summary -->
+    <div>
+      <div class="summary-card">
+        <h3>Your Order</h3>
+        <div class="co-items" id="co-items"></div>
+        <div id="co-totals"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+<script>
+  let step = 1;
+
+  // Persist form values across step changes
+  const formData = {
+    firstName: '', lastName: '', email: '', phone: '',
+    address: '', city: '', state: '', zip: '', country: 'United States',
+    shipping: 'standard',
+    cardNumber: '', expiry: '', cvv: '', nameOnCard: '',
+    sameAsBilling: true
+  };
+
+  // ── Guard: redirect if cart empty ─────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    if (Cart.getItems().length === 0) { window.location.href = 'cart.html'; return; }
+    renderSummary();
+    goStep(1);
+  });
+
+  // ── Step bar ───────────────────────────────────────────────
+  function renderStepBar() {
+    const steps = ['Shipping', 'Payment', 'Review'];
+    document.getElementById('step-bar').innerHTML = steps.map((name, i) => {
+      const n   = i + 1;
+      const cls = n < step ? 'done' : n === step ? 'active' : '';
+      return `
+        ${i > 0 ? '<div class="step-connector"></div>' : ''}
+        <div class="step-item ${cls}">
+          <div class="step-num">${n < step ? '✓' : n}</div>
+          <span>${name}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Order summary (right panel) ────────────────────────────
+  function renderSummary() {
+    const items    = Cart.getItems();
+    const subtotal = Cart.getSubtotal();
+    const shipping = formData.shipping === 'express' ? 9.99 : 0;
+    const tax      = subtotal * 0.08;
+    const total    = subtotal + shipping + tax;
+
+    document.getElementById('co-items').innerHTML = items.map(i => `
+      <div class="co-item">
+        <div class="co-thumb">${i.emoji || '📦'}</div>
+        <span class="co-name">${i.name}</span>
+        <span class="co-qty">×${i.quantity}</span>
+        <span class="co-price">${fmt(i.price * i.quantity)}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('co-totals').innerHTML = `
+      <div class="divider"></div>
+      <div class="summary-row"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
+      <div class="summary-row">
+        <span>Shipping</span>
+        <span>${shipping === 0 ? '<span class="text-success">Free</span>' : fmt(shipping)}</span>
+      </div>
+      <div class="summary-row"><span>Tax (8%)</span><span>${fmt(tax)}</span></div>
+      <div class="summary-row total"><span>Total</span><span>${fmt(total)}</span></div>
+    `;
+  }
+
+  // ── Step routing ───────────────────────────────────────────
+  function goStep(n) {
+    step = n;
+    renderStepBar();
+    renderSummary();
+    if (n === 1) renderShipping();
+    else if (n === 2) renderPayment();
+    else if (n === 3) renderReview();
+  }
+
+  // ── Step 1: Shipping ───────────────────────────────────────
+  function renderShipping() {
+    document.getElementById('form-area').innerHTML = `
+      <div class="form-section">
+        <div class="form-section-label">Contact Information</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" id="f-firstName" value="${formData.firstName}" placeholder="Jane">
+          </div>
+          <div class="form-group">
+            <label>Last Name *</label>
+            <input type="text" id="f-lastName" value="${formData.lastName}" placeholder="Smith">
+          </div>
+          <div class="form-group span2">
+            <label>Email Address *</label>
+            <input type="email" id="f-email" value="${formData.email}" placeholder="jane@example.com">
+          </div>
+          <div class="form-group span2">
+            <label>Phone Number</label>
+            <input type="tel" id="f-phone" value="${formData.phone}" placeholder="+1 (555) 000-0000">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-label">Shipping Address</div>
+        <div class="form-grid">
+          <div class="form-group span2">
+            <label>Street Address *</label>
+            <input type="text" id="f-address" value="${formData.address}" placeholder="123 Main Street, Apt 4B">
+          </div>
+          <div class="form-group">
+            <label>City *</label>
+            <input type="text" id="f-city" value="${formData.city}" placeholder="New York">
+          </div>
+          <div class="form-group">
+            <label>State / Province *</label>
+            <input type="text" id="f-state" value="${formData.state}" placeholder="NY">
+          </div>
+          <div class="form-group">
+            <label>ZIP / Postal Code *</label>
+            <input type="text" id="f-zip" value="${formData.zip}" placeholder="10001">
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <select id="f-country">
+              ${['United States','Canada','United Kingdom','Australia','Germany','France','Japan'].map(c =>
+                `<option ${formData.country === c ? 'selected' : ''}>${c}</option>`
+              ).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-label">Shipping Method</div>
+        <div class="shipping-option ${formData.shipping === 'standard' ? 'selected' : ''}" id="ship-standard" onclick="selectShipping('standard')">
+          <input type="radio" name="ship" ${formData.shipping === 'standard' ? 'checked' : ''}>
+          <div class="ship-info">
+            <div class="ship-name">Standard Shipping</div>
+            <div class="ship-days">Estimated 5–7 business days</div>
+          </div>
+          <div class="ship-price text-success">Free</div>
+        </div>
+        <div class="shipping-option ${formData.shipping === 'express' ? 'selected' : ''}" id="ship-express" onclick="selectShipping('express')">
+          <input type="radio" name="ship" ${formData.shipping === 'express' ? 'checked' : ''}>
+          <div class="ship-info">
+            <div class="ship-name">Express Shipping</div>
+            <div class="ship-days">Estimated 2–3 business days</div>
+          </div>
+          <div class="ship-price">$9.99</div>
+        </div>
+      </div>
+
+      <div class="checkout-actions">
+        <a href="cart.html" class="btn btn-ghost">← Back to Cart</a>
+        <button class="btn btn-primary btn-lg" onclick="submitShipping()">Continue to Payment →</button>
+      </div>`;
+  }
+
+  function selectShipping(method) {
+    formData.shipping = method;
+    document.querySelectorAll('.shipping-option').forEach(el => el.classList.remove('selected'));
+    document.getElementById(`ship-${method}`).classList.add('selected');
+    renderSummary();
+  }
+
+  function submitShipping() {
+    const req = ['firstName','lastName','email','address','city','state','zip'];
+    for (const f of req) {
+      const el = document.getElementById(`f-${f}`);
+      if (!el.value.trim()) {
+        el.style.borderColor = 'var(--danger)';
+        el.focus();
+        showToast('Please fill in all required fields.');
+        return;
+      }
+      el.style.borderColor = '';
+    }
+    // Save
+    ['firstName','lastName','email','phone','address','city','state','zip','country'].forEach(f => {
+      const el = document.getElementById(`f-${f}`);
+      if (el) formData[f] = el.value;
+    });
+    goStep(2);
+  }
+
+  // ── Step 2: Payment ────────────────────────────────────────
+  function renderPayment() {
+    document.getElementById('form-area').innerHTML = `
+      <div class="form-section">
+        <div class="form-section-label">Payment Method</div>
+        <div class="payment-tabs">
+          <div class="pay-tab active" id="tab-card" onclick="selectPayTab('card')">💳 Credit / Debit Card</div>
+          <div class="pay-tab" id="tab-paypal" onclick="selectPayTab('paypal')">🅿 PayPal</div>
+          <div class="pay-tab" id="tab-applepay" onclick="selectPayTab('applepay')"> Apple Pay</div>
+        </div>
+        <div id="pay-content"></div>
+      </div>
+
+      <div class="checkout-actions">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary btn-lg" onclick="submitPayment()">Review Order →</button>
+      </div>`;
+
+    renderCardForm();
+  }
+
+  let activePayTab = 'card';
+
+  function selectPayTab(tab) {
+    activePayTab = tab;
+    document.querySelectorAll('.pay-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    if (tab === 'card') renderCardForm();
+    else {
+      document.getElementById('pay-content').innerHTML = `
+        <div style="padding:1.5rem;text-align:center;background:#f8fafc;border-radius:var(--radius);color:var(--text-muted)">
+          <div style="font-size:2rem;margin-bottom:0.5rem">${tab === 'paypal' ? '🅿' : ''}</div>
+          <p>You will be redirected to ${tab === 'paypal' ? 'PayPal' : 'Apple Pay'} to complete your payment.</p>
+        </div>`;
+    }
+  }
+
+  function renderCardForm() {
+    document.getElementById('pay-content').innerHTML = `
+      <div class="card-row" style="margin-bottom:0.85rem">
+        <span class="card-icon">VISA</span>
+        <span class="card-icon">MC</span>
+        <span class="card-icon">AMEX</span>
+        <span class="card-icon">DISC</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Card Number *</label>
+          <input type="text" id="f-cardNumber" value="${formData.cardNumber}"
+            placeholder="1234 5678 9012 3456" maxlength="19"
+            oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(.{4})/g,'$1 ').trim().slice(0,19)">
+        </div>
+        <div class="form-group">
+          <label>Expiry Date *</label>
+          <input type="text" id="f-expiry" value="${formData.expiry}"
+            placeholder="MM / YY" maxlength="7"
+            oninput="let v=this.value.replace(/[^0-9]/g,'');if(v.length>=3)v=v.slice(0,2)+' / '+v.slice(2);this.value=v;">
+        </div>
+        <div class="form-group">
+          <label>CVV *</label>
+          <input type="text" id="f-cvv" value="${formData.cvv}"
+            placeholder="123" maxlength="4"
+            oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+        <div class="form-group span2">
+          <label>Name on Card *</label>
+          <input type="text" id="f-nameOnCard" value="${formData.nameOnCard}" placeholder="Jane Smith">
+        </div>
+      </div>
+      <div style="margin-top:0.85rem">
+        <label class="filter-option">
+          <input type="checkbox" id="f-sameAsBilling" ${formData.sameAsBilling ? 'checked' : ''}>
+          <label for="f-sameAsBilling" style="font-size:0.875rem">Billing address same as shipping</label>
+        </label>
+      </div>`;
+  }
+
+  function submitPayment() {
+    if (activePayTab === 'card') {
+      const req = ['cardNumber','expiry','cvv','nameOnCard'];
+      for (const f of req) {
+        const el = document.getElementById(`f-${f}`);
+        if (!el || !el.value.trim()) {
+          if (el) el.style.borderColor = 'var(--danger)';
+          showToast('Please fill in all card details.');
+          return;
+        }
+        el.style.borderColor = '';
+      }
+      ['cardNumber','expiry','cvv','nameOnCard'].forEach(f => {
+        const el = document.getElementById(`f-${f}`);
+        if (el) formData[f] = el.value;
+      });
+      formData.sameAsBilling = document.getElementById('f-sameAsBilling')?.checked ?? true;
+    }
+    goStep(3);
+  }
+
+  // ── Step 3: Review ─────────────────────────────────────────
+  function renderReview() {
+    const items    = Cart.getItems();
+    const subtotal = Cart.getSubtotal();
+    const shipping = formData.shipping === 'express' ? 9.99 : 0;
+    const tax      = subtotal * 0.08;
+    const total    = subtotal + shipping + tax;
+
+    const maskedCard = formData.cardNumber
+      ? '•••• •••• •••• ' + formData.cardNumber.replace(/\s/g,'').slice(-4)
+      : 'N/A';
+
+    document.getElementById('form-area').innerHTML = `
+      <div class="review-block">
+        <div class="review-block-title">Shipping to</div>
+        <div class="review-block-val">
+          ${formData.firstName} ${formData.lastName}<br>
+          ${formData.address}, ${formData.city}, ${formData.state} ${formData.zip}<br>
+          ${formData.country}
+        </div>
+      </div>
+
+      <div class="review-block">
+        <div class="review-block-title">Delivery Method</div>
+        <div class="review-block-val">
+          ${formData.shipping === 'express' ? 'Express (2–3 days) — $9.99' : 'Standard (5–7 days) — Free'}
+        </div>
+      </div>
+
+      <div class="review-block">
+        <div class="review-block-title">Payment</div>
+        <div class="review-block-val">${activePayTab === 'card' ? maskedCard : (activePayTab === 'paypal' ? 'PayPal' : 'Apple Pay')}</div>
+      </div>
+
+      <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem">
+        ${items.map(i => `
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem;border-bottom:1px solid var(--border)">
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${i.emoji || '📦'}</div>
+            <div style="flex:1;font-size:0.9rem;font-weight:500">${i.name}</div>
+            <div style="font-size:0.82rem;color:var(--text-muted)">×${i.quantity}</div>
+            <div style="font-weight:700;font-size:0.9rem">${fmt(i.price * i.quantity)}</div>
+          </div>`).join('')}
+      </div>
+
+      <div style="background:#f8fafc;border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem">
+        <div style="display:flex;justify-content:space-between;font-size:0.875rem;color:var(--text-muted);margin-bottom:0.4rem">
+          <span>Subtotal</span><span>${fmt(subtotal)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.875rem;color:var(--text-muted);margin-bottom:0.4rem">
+          <span>Shipping</span>
+          <span>${shipping === 0 ? '<span class="text-success">Free</span>' : fmt(shipping)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.875rem;color:var(--text-muted);margin-bottom:0.4rem">
+          <span>Tax (8%)</span><span>${fmt(tax)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1rem;border-top:1px solid var(--border);padding-top:0.6rem;margin-top:0.25rem">
+          <span>Total</span><span>${fmt(total)}</span>
+        </div>
+      </div>
+
+      <div class="checkout-actions">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary btn-lg" onclick="placeOrder(${total.toFixed(2)})">
+          Place Order — ${fmt(total)}
+        </button>
+      </div>`;
+  }
+
+  // ── Place Order ────────────────────────────────────────────
+  function placeOrder(total) {
+    const items = Cart.getItems();
+    const txnId = 'ORD-' + Date.now().toString(36).toUpperCase();
+
+    sessionStorage.setItem('last_order', JSON.stringify({
+      id: txnId,
+      items,
+      subtotal: Cart.getSubtotal(),
+      shipping: formData.shipping === 'express' ? 9.99 : 0,
+      tax: parseFloat((Cart.getSubtotal() * 0.08).toFixed(2)),
+      total: parseFloat(total),
+      date: new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }),
+      shipping_to: `${formData.firstName} ${formData.lastName}, ${formData.address}, ${formData.city} ${formData.zip}`
+    }));
+
+    Cart.clear();
+    window.location.href = 'confirmation.html';
+  }
+</script>
+
+</body>
+</html>

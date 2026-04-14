@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmed — ShopDemo</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Shop<span>Demo</span></a>
+    <nav class="nav-links">
+      <a href="index.html">Continue Shopping</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <div class="confirm-wrap">
+    <div class="confirm-card">
+      <div class="confirm-icon">✓</div>
+      <h1>Order Confirmed!</h1>
+      <p id="confirm-msg">Thank you for your purchase. Your order has been placed successfully.</p>
+
+      <div class="order-details-table" id="order-table"></div>
+
+      <div id="order-items-section"></div>
+
+      <div class="confirm-actions">
+        <a href="index.html" class="btn btn-primary btn-lg">Continue Shopping</a>
+        <button class="btn btn-ghost btn-lg" onclick="window.print()">🖨 Print Receipt</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/main.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let order = null;
+    try { order = JSON.parse(sessionStorage.getItem('last_order')); } catch {}
+
+    if (!order) {
+      // No order in session — show generic message
+      document.getElementById('confirm-msg').textContent = 'Your order was placed successfully.';
+      document.getElementById('order-table').innerHTML = `
+        <div class="od-row">
+          <span class="od-label">Status</span>
+          <span class="od-value" style="color:var(--success)">✓ Confirmed</span>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('confirm-msg').textContent =
+      `Thank you, your order ${order.id} has been confirmed. A receipt will be sent to your email.`;
+
+    document.getElementById('order-table').innerHTML = `
+      <div class="od-row">
+        <span class="od-label">Order ID</span>
+        <span class="od-value">${order.id}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Date</span>
+        <span class="od-value">${order.date}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Ship to</span>
+        <span class="od-value">${order.shipping_to}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Items</span>
+        <span class="od-value">${order.items.reduce((s,i) => s + i.quantity, 0)}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Subtotal</span>
+        <span class="od-value">${fmt(order.subtotal)}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Shipping</span>
+        <span class="od-value ${order.shipping === 0 ? 'text-success' : ''}">${order.shipping === 0 ? 'Free' : fmt(order.shipping)}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Tax</span>
+        <span class="od-value">${fmt(order.tax)}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Order Total</span>
+        <span class="od-value" style="font-size:1.05rem">${fmt(order.total)}</span>
+      </div>
+      <div class="od-row">
+        <span class="od-label">Status</span>
+        <span class="od-value" style="color:var(--success)">✓ Confirmed</span>
+      </div>`;
+
+    if (order.items && order.items.length > 0) {
+      document.getElementById('order-items-section').innerHTML = `
+        <div style="margin:1.25rem 0 1.5rem;text-align:left">
+          <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:0.75rem">Items Ordered</div>
+          <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+            ${order.items.map(i => `
+              <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-bottom:1px solid var(--border)">
+                <div style="width:38px;height:38px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">${i.emoji || '📦'}</div>
+                <span style="flex:1;font-size:0.875rem;font-weight:500;text-align:left">${i.name}</span>
+                <span style="font-size:0.82rem;color:var(--text-muted)">×${i.quantity}</span>
+                <span style="font-weight:700;font-size:0.875rem">${fmt(i.price * i.quantity)}</span>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+  });
+</script>
+
+</body>
+</html>
