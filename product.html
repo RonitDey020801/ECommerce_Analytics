@@ -127,6 +127,13 @@
       });
 
       document.getElementById('atc-btn').addEventListener('click', () => {
+        Analytics.track('Clicked on Add to Cart', {
+          product_name: product.name, product_category: product.category,
+          on_sale: product.badge === 'sale' || !!product.originalPrice,
+          new: product.badge === 'new', rating: product.rating, reviews: product.reviews,
+          price: product.price, discount: product.originalPrice ? savePct(product.originalPrice, product.price) + '%' : '0%',
+          quantity: qty, page: 'Product Detail'
+        });
         Cart.addItem(product, qty);
         syncCart();
       });
@@ -140,7 +147,7 @@
           <h2 class="section-title">You Might Also Like</h2>
           <div class="product-grid">
             ${related.map(p => `
-              <div class="product-card" onclick="window.location.href='product.html?id=${p.id}'">
+              <div class="product-card" onclick="relatedClick(${p.id})">
                 <div class="product-thumb">
                   ${p.emoji}
                   ${p.badge === 'sale' ? `<span class="badge-sale">SALE</span>` : ''}
@@ -171,18 +178,31 @@
     }
   }
 
+  function relatedPropHelper(p) {
+    return {
+      product_name: p.name, product_category: p.category,
+      on_sale: p.badge === 'sale' || !!p.originalPrice,
+      new: p.badge === 'new', rating: p.rating, reviews: p.reviews,
+      price: p.price, discount: p.originalPrice ? savePct(p.originalPrice, p.price) + '%' : '0%'
+    };
+  }
+
+  function relatedClick(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) Analytics.track('Clicked on Card', { ...relatedPropHelper(p), quantity: 1, page: 'Product Detail' });
+    window.location.href = `product.html?id=${id}`;
+  }
+
   function relatedAdd(id) {
     const p = PRODUCTS.find(x => x.id === id);
+    Analytics.track('Clicked on Add to Cart', { ...relatedPropHelper(p), quantity: 1, page: 'Product Detail' });
     Cart.addItem(p, 1);
     syncCart();
   }
 
-  // Analytics: page + product view
+  // Analytics: page view
   document.addEventListener('DOMContentLoaded', () => {
-    Analytics.track('page_view', { page: 'product', product_id: productId, title: document.title });
-    if (product) {
-      Analytics.track('product_view', { product_id: product.id, product_name: product.name, category: product.category, price: product.price, currency: 'USD' });
-    }
+    Analytics.track('Page View', { page: 'Product Detail' });
   });
 
   // Search redirect
