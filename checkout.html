@@ -63,7 +63,7 @@
     if (Cart.getItems().length === 0) { window.location.href = 'cart.html'; return; }
     renderSummary();
     goStep(1);
-    Analytics.track('page_view', { page: 'checkout', title: document.title });
+    Analytics.track('Page View', { label: 'Checkout Page' });
   });
 
   // ── Step bar ───────────────────────────────────────────────
@@ -118,8 +118,7 @@
     if (n === 1) renderShipping();
     else if (n === 2) renderPayment();
     else if (n === 3) renderReview();
-    const names = { 1: 'shipping', 2: 'payment', 3: 'review' };
-    Analytics.track('checkout_step', { step: n, step_name: names[n] });
+    // no taxonomy event for step changes
   }
 
   // ── Step 1: Shipping ───────────────────────────────────────
@@ -226,6 +225,13 @@
     ['firstName','lastName','email','phone','address','city','state','zip','country'].forEach(f => {
       const el = document.getElementById(`f-${f}`);
       if (el) formData[f] = el.value;
+    });
+    Analytics.track('Proceed to Checkout', {
+      label: 'Shipping Info Submitted',
+      country: formData.country,
+      city: formData.city,
+      state: formData.state,
+      postal_code: formData.zip
     });
     goStep(2);
   }
@@ -412,7 +418,6 @@
       shipping_to: `${formData.firstName} ${formData.lastName}, ${formData.address}, ${formData.city} ${formData.zip}`
     }));
 
-    Analytics.track('purchase', { transaction_id: txnId, revenue: parseFloat(total), currency: 'USD', items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })) });
     Cart.clear();
     window.location.href = 'confirmation.html';
   }

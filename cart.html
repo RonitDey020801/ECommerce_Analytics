@@ -137,11 +137,18 @@
   }
 
   function changeQty(id, newQty) {
+    const item = Cart.getItems().find(i => i.id === id);
+    if (item && newQty >= 1) {
+      const action = newQty > item.quantity ? 'Increased' : 'Decreased';
+      Analytics.track('Quantity Changed', { product_name: item.name, action, quantity: newQty });
+    }
     Cart.updateQty(id, newQty);
     render();
   }
 
   function removeItem(id) {
+    const item = Cart.getItems().find(i => i.id === id);
+    if (item) Analytics.track('Removed from Cart', { product_name: item.name, action: 'Removed', quantity: 0 });
     Cart.removeItem(id);
     render();
   }
@@ -159,14 +166,12 @@
   }
 
   function startCheckout() {
-    Analytics.track('checkout_start', { items: Cart.getItems().map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })), subtotal: Cart.getSubtotal(), item_count: Cart.getCount(), currency: 'USD' });
     window.location.href = 'checkout.html';
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     render();
-    Analytics.track('page_view', { page: 'cart', title: document.title });
-    Analytics.track('cart_view', { items: Cart.getItems().map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })), subtotal: Cart.getSubtotal(), item_count: Cart.getCount() });
+    Analytics.track('Page View', {});
   });
 
   // Search redirect

@@ -199,6 +199,7 @@
     document.querySelectorAll('#cat-filters input').forEach(cb => {
       cb.addEventListener('change', () => {
         cb.checked ? state.categories.add(cb.value) : state.categories.delete(cb.value);
+        if (cb.checked) Analytics.track('Category Filter', { action: 'Applied', label: 'Filter by Category', filter: cb.value });
         renderFilterTags();
         renderProducts();
       });
@@ -235,15 +236,30 @@
     renderProducts();
   }
 
+  // ── Product property helpers ───────────────────────────────
+  function productProps(p) {
+    return {
+      product_name: p.name,
+      product_category: p.category,
+      on_sale: p.badge === 'sale' || !!p.originalPrice,
+      new: p.badge === 'new',
+      rating: p.rating,
+      reviews: p.reviews,
+      price: p.price,
+      discount: p.originalPrice ? savePct(p.originalPrice, p.price) + '%' : '0%'
+    };
+  }
+
   // ── Actions ────────────────────────────────────────────────
   function goProduct(id) {
     const p = PRODUCTS.find(x => x.id === id);
-    if (p) Analytics.track('product_click', { product_id: p.id, product_name: p.name, category: p.category, price: p.price });
+    if (p) Analytics.track('Clicked on Card', { ...productProps(p), quantity: 1, page: 'Products Listing' });
     window.location.href = `product.html?id=${id}`;
   }
 
   function quickAdd(id) {
     const p = PRODUCTS.find(x => x.id === id);
+    Analytics.track('Clicked on Add to Cart', { ...productProps(p), quantity: 1, page: 'Products Listing' });
     Cart.addItem(p, 1);
     syncCart();
   }
@@ -253,7 +269,15 @@
     renderCatFilters();
     renderProducts();
     renderFilterTags();
-    Analytics.track('page_view', { page: 'shop', title: document.title });
+    Analytics.track('Page View', { label: 'Home Page' });
+
+    // Nav Click tracking
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        const dest = link.textContent.trim();
+        Analytics.track('Nav Click', { label: 'Clicked ' + dest + ' Tab' });
+      });
+    });
   });
 
   // Search
@@ -268,13 +292,13 @@
   searchInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       state.search = searchInput.value.trim();
-      if (state.search) Analytics.track('search', { query: state.search, result_count: filtered().length });
+      if (state.search) Analytics.track('Search', { label: 'Search Executed', search_text: state.search });
       renderFilterTags(); renderProducts();
     }
   });
   document.getElementById('search-btn').addEventListener('click', () => {
     state.search = searchInput.value.trim();
-    if (state.search) Analytics.track('search', { query: state.search, result_count: filtered().length });
+    if (state.search) Analytics.track('Search', { label: 'Search Executed', search_text: state.search });
     renderFilterTags(); renderProducts();
   });
 
@@ -282,21 +306,23 @@
   document.getElementById('apply-price').addEventListener('click', () => {
     state.minPrice = parseFloat(document.getElementById('price-min').value) || 0;
     state.maxPrice = parseFloat(document.getElementById('price-max').value) || 9999;
+    Analytics.track('Range Filter', { action: 'Applied', label: 'Filter by Price', filter: 'Price', range_start: state.minPrice, range_end: state.maxPrice });
     renderProducts();
   });
 
   // In stock
   document.getElementById('in-stock-only').addEventListener('change', e => {
     state.inStockOnly = e.target.checked;
-    Analytics.track('filter_applied', { filter_type: 'availability', filter_value: state.inStockOnly ? 'in_stock' : 'all' });
+    if (state.inStockOnly) Analytics.track('Availability Filter', { action: 'Applied', label: 'In Stock Only', filter: 'In Stock' });
     renderFilterTags();
     renderProducts();
   });
 
   // Sort
+  const sortLabels = { 'default': 'Featured', 'price-asc': 'Price: Low to High', 'price-desc': 'Price: High to Low', 'name-asc': 'Name: A to Z', 'rating-desc': 'Highest Rated' };
   document.getElementById('sort-select').addEventListener('change', e => {
     state.sort = e.target.value;
-    Analytics.track('sort_applied', { sort_type: state.sort });
+    Analytics.track('Sort By', { action: 'Selected', label: 'Sort by ' + sortLabels[state.sort], filter: sortLabels[state.sort] });
     renderProducts();
   });
 
@@ -308,6 +334,7 @@
     document.getElementById('price-max').value = '300';
     document.getElementById('in-stock-only').checked = false;
     document.getElementById('sort-select').value = 'default';
+    Analytics.track('Clear Filters', { action: 'Clicked', label: 'Reset All Filters' });
     renderCatFilters();
     renderFilterTags();
     renderProducts();

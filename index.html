@@ -349,6 +349,10 @@
 <script>
   const redirectTo = getParam('redirect') || 'shop.html';
 
+  document.addEventListener('DOMContentLoaded', () => {
+    Analytics.track('Page View', { label: 'Login Page Loaded' });
+  });
+
   // ── Password visibility toggle ─────────────────────────
   document.getElementById('toggle-pw').addEventListener('click', () => {
     const pw = document.getElementById('password');
@@ -388,12 +392,14 @@
     if (!email || !password) {
       errorEl.textContent = 'Please enter your email and password.';
       errorEl.classList.add('show');
+      Analytics.track('Login Attempt', { label: 'Login Failed' });
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errorEl.textContent = 'Please enter a valid email address.';
       errorEl.classList.add('show');
+      Analytics.track('Login Attempt', { label: 'Login Failed' });
       return;
     }
 
@@ -401,12 +407,14 @@
       errorEl.textContent = 'Incorrect password. Hint: try "demo123"';
       errorEl.classList.add('show');
       pwInput.classList.add('field-error');
+      Analytics.track('Login Attempt', { label: 'Login Failed' });
       return;
     }
 
     errorEl.classList.remove('show');
     pwInput.classList.remove('field-error');
 
+    Analytics.track('Login Attempt', { label: 'Login Successful' });
     sessionStorage.setItem('shopdemo_user', JSON.stringify({ email, remember }));
     showToast('Signed in successfully! Redirecting…');
     setTimeout(() => { window.location.href = redirectTo; }, 1200);
